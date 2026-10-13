@@ -9,25 +9,26 @@ A tiny Windows utility that opens the **Claude** desktop app when you press the 
 
 ## Installation
 
-1. Download the repository (**Code → Download ZIP**) and extract it to a permanent folder, e.g. `Documents\claude-key`.
-   The program runs from this folder after installation, so don't delete it.
+1. Download the repository (**Code → Download ZIP**) and extract it anywhere (don't run it from inside the ZIP).
 2. Double-click the file that matches your keyboard:
    - `install-copilot-key.vbs`
    - `install-menu-key.vbs`
 3. When the "Installation finished" message appears, press the key to try it.
 
-The installer compiles the program to `bin\ClaudeKey.exe`, adds it to Windows startup and starts it right away.
-If anything goes wrong, details are written to `install_log.txt` in the folder.
+The installer compiles the program into `%LOCALAPPDATA%\ClaudeKey`, adds it to Windows startup and starts it right away.
+After that, the downloaded folder is no longer needed and can be deleted.
+If anything goes wrong, details are written to `%LOCALAPPDATA%\ClaudeKey\install_log.txt`.
 
 ## Uninstall
 
-Double-click `uninstall.vbs`. The program is stopped and removed from startup; you can then delete the folder.
+Double-click `uninstall.vbs`, or run `%LOCALAPPDATA%\ClaudeKey\uninstall.bat` if you no longer have the downloaded folder.
+The program is stopped, removed from startup and its folder is deleted.
 
 ## Manual usage
 
 ```
-bin\ClaudeKey.exe copilot   # Copilot key
-bin\ClaudeKey.exe menu      # Context Menu key
+%LOCALAPPDATA%\ClaudeKey\ClaudeKey.exe copilot   # Copilot key
+%LOCALAPPDATA%\ClaudeKey\ClaudeKey.exe menu      # Context Menu key
 ```
 
 Only one instance runs at a time. To stop it, end the **ClaudeKey** process in Task Manager.
@@ -49,8 +50,8 @@ The program installs a low-level keyboard hook (`WH_KEYBOARD_LL`):
 
 ```
 src/ClaudeKey.cs             Program source
-scripts/install.bat          Build + add to startup
-scripts/uninstall.bat        Stop + remove from startup
+scripts/install.bat          Build into %LOCALAPPDATA%\ClaudeKey + add to startup
+scripts/uninstall.bat        Stop + remove from startup + delete
 install-*.vbs, uninstall.vbs Double-click launchers
 .github/workflows/build.yml  Compile check on Windows for every push
 ```

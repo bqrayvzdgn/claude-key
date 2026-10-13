@@ -1,18 +1,21 @@
 @echo off
 rem ClaudeKey installer
 rem Usage: install.bat [copilot|menu]
-rem Compiles the source, adds it to startup and starts it.
+rem Compiles the source into %LOCALAPPDATA%\ClaudeKey, adds it to startup and starts it.
+rem The downloaded folder is no longer needed afterwards.
 
 setlocal
 set "ROOT=%~dp0.."
 for %%I in ("%ROOT%") do set "ROOT=%%~fI"
 set "KEY=%~1"
 if "%KEY%"=="" set "KEY=copilot"
-set "EXE=%ROOT%\bin\ClaudeKey.exe"
-set "LOG=%ROOT%\install_log.txt"
+set "APPDIR=%LOCALAPPDATA%\ClaudeKey"
+set "EXE=%APPDIR%\ClaudeKey.exe"
+set "LOG=%APPDIR%\install_log.txt"
 set "CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if not exist "%CSC%" set "CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe"
 
+if not exist "%APPDIR%" mkdir "%APPDIR%"
 echo === ClaudeKey install (%KEY%) %date% %time% === > "%LOG%"
 
 echo [Claude] >> "%LOG%"
@@ -26,13 +29,16 @@ powershell -NoProfile -Command "$p=[Environment]::GetFolderPath('Startup')+'\Cla
 timeout /t 1 /nobreak >nul
 
 echo [Build] >> "%LOG%"
-if not exist "%ROOT%\bin" mkdir "%ROOT%\bin"
+if exist "%EXE%" del /f /q "%EXE%"
 "%CSC%" /nologo /optimize+ /target:winexe /out:"%EXE%" "%ROOT%\src\ClaudeKey.cs" >> "%LOG%" 2>&1
 if not exist "%EXE%" (echo BUILD_FAILED >> "%LOG%" & goto end)
 echo BUILD_OK >> "%LOG%"
 
+rem Keep an uninstaller next to the program so the downloaded folder can be deleted
+copy /y "%ROOT%\scripts\uninstall.bat" "%APPDIR%\uninstall.bat" >nul
+
 echo [Startup shortcut] >> "%LOG%"
-powershell -NoProfile -Command "$p=[Environment]::GetFolderPath('Startup')+'\ClaudeKey.lnk'; $s=(New-Object -ComObject WScript.Shell).CreateShortcut($p); $s.TargetPath='%EXE%'; $s.Arguments='%KEY%'; $s.WorkingDirectory='%ROOT%'; $s.Save(); if(Test-Path $p){'SHORTCUT_OK'}else{'SHORTCUT_FAILED'}" >> "%LOG%" 2>&1
+powershell -NoProfile -Command "$p=[Environment]::GetFolderPath('Startup')+'\ClaudeKey.lnk'; $s=(New-Object -ComObject WScript.Shell).CreateShortcut($p); $s.TargetPath='%EXE%'; $s.Arguments='%KEY%'; $s.WorkingDirectory='%APPDIR%'; $s.Save(); if(Test-Path $p){'SHORTCUT_OK'}else{'SHORTCUT_FAILED'}" >> "%LOG%" 2>&1
 
 start "" "%EXE%" %KEY%
 timeout /t 2 /nobreak >nul
