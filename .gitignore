@@ -1,4 +1,4 @@
 bin/
 *.exe
 *.pdb
-kurulum_log.txt
+install_log.txt
