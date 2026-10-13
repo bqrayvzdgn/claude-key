@@ -1,0 +1,23 @@
+name: Derleme
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derle
+        shell: cmd
+        run: |
+          mkdir bin
+          "%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /optimize+ /target:winexe /out:bin\ClaudeTusu.exe src\ClaudeTusu.cs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ClaudeTusu
+          path: bin/ClaudeTusu.exe
