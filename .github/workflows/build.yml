@@ -21,3 +21,33 @@ jobs:
         with:
           name: ClaudeKey
           path: bin/ClaudeKey.exe
+
+  install-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run installer
+        shell: cmd
+        run: call scripts\install.bat copilot
+
+      - name: Check install
+        shell: pwsh
+        run: |
+          $app = "$env:LOCALAPPDATA\ClaudeKey"
+          Get-Content "$app\install_log.txt"
+          $log = Get-Content "$app\install_log.txt" -Raw
+          foreach ($m in 'BUILD_OK','SHORTCUT_OK') { if ($log -notmatch $m) { throw "missing $m" } }
+          foreach ($f in 'ClaudeKey.exe','uninstall.bat') { if (-not (Test-Path "$app\$f")) { throw "missing $f" } }
+          $lnk = [Environment]::GetFolderPath('Startup') + '\ClaudeKey.lnk'
+          if (-not (Test-Path $lnk)) { throw "missing startup shortcut" }
+
+      - name: Run uninstaller
+        shell: cmd
+        run: call "%LOCALAPPDATA%\ClaudeKey\uninstall.bat"
+
+      - name: Check uninstall
+        shell: pwsh
+        run: |
+          if (Test-Path "$env:LOCALAPPDATA\ClaudeKey") { throw "app folder still exists" }
+          if (Test-Path ([Environment]::GetFolderPath('Startup') + '\ClaudeKey.lnk')) { throw "shortcut still exists" }
